@@ -17,3 +17,25 @@ impl Into<u8> for Feature {
         self as u8
     }
 }
+
+impl Feature {
+    pub const fn left() -> Vec<Feature> {
+        use Feature::*;
+        vec![
+            Tall,
+            Red,
+            Square,
+            Hollow,
+        ]
+    }
+
+    pub const fn right() -> Vec<Feature> {
+        use Feature::*;
+        vec![
+            Short,
+            Blue,
+            Round,
+            Solid,
+        ]
+    }
+}
