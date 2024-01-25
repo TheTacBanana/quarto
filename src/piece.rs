@@ -1,6 +1,6 @@
 use crate::feat::Feature;
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Piece(u8);
 
 impl Piece {
