@@ -14,20 +14,21 @@ fn main() -> Result<(), QuartoError>{
 
     loop {
         println!("Player {} nominate:", game.current_nominator());
-        println!("Player {} place:", game.current_player());
-
-        println!("{:?}", game.remaining_pieces().len());
+        println!("Remaining Pieces: {:?}", game.remaining_pieces().len());
 
         let mut input = String::new();
         io::stdin().read_line(&mut input).unwrap();
         let input: usize = input.trim().parse().unwrap();
         game.nominate_piece(input);
 
+
+        println!("Player {} place:", game.current_player());
+
         let mut input = String::new();
         io::stdin().read_line(&mut input).unwrap();
         let split = input.split(",").collect::<Vec<_>>();
         let row: usize = split[0].trim().parse().unwrap();
         let col: usize = split[1].trim().parse().unwrap();
-        game.play(Position::from_coord(row, col))?;
+        game.play(Position::from_coord(row, col).unwrap())?;
     }
 }

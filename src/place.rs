@@ -8,8 +8,16 @@ use crate::piece::Piece;
 pub struct Position(usize);
 
 impl Position {
-    pub fn from_coord(row : impl Into<usize>, col : impl Into<usize>) -> Self {
-        Position(col.into() * 4 + row.into())
+    pub fn from_coord(row : impl Into<usize>, col : impl Into<usize>) -> Option<Self> {
+        match (row.into(),col.into()) {
+            (r,c) if (0..4).contains(&r) && (0..4).contains(&c) => {
+                Some(Position(c * 4 + r))
+            }
+            _ => {
+                None
+            }
+        }
+        
     }
 
     pub fn to_index(&self) -> usize {
