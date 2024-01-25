@@ -1,7 +1,7 @@
 use crate::feat::Feature;
 
 #[derive(Debug, Clone, Copy)]
-pub struct Piece(u8);
+pub struct Piece(pub u8);
 
 impl Piece {
     pub fn from_feat(f1: Feature, f2: Feature, f3: Feature, f4: Feature) -> Self {

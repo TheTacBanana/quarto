@@ -68,6 +68,24 @@ impl Game {
         &self.remaining_pieces
     }
 
+    pub fn detect_win(&self) -> bool {
+        println!("{:?}", self.cur_board.iter().array_chunks::<4>());
+        let rows = self.cur_board.iter().array_chunks::<4>().any(
+            |xs| {
+                xs.iter().try_fold(u8::MAX, |x, new| {
+                    new.map(|y| {
+                        let piece = self.moves.get(y).unwrap();
+                        x & piece.0.0
+                    })
+                }).is_some_and(|x| x > 0)
+            }
+        );
+
+        println!("{:?}", rows);
+
+        rows
+    }
+
 }
 
 #[derive(Debug, Clone, Copy)]

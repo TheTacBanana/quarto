@@ -26,7 +26,7 @@ impl Position {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct Placed(Piece, Position);
+pub struct Placed(pub Piece, pub Position);
 
 impl Placed {
     pub fn from_nominated(nominated: Piece, pos : Position) -> Self {

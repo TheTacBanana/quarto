@@ -1,3 +1,5 @@
+#![feature(iter_array_chunks)]
+
 use std::io;
 
 use game::{Game, QuartoError};
@@ -21,7 +23,6 @@ fn main() -> Result<(), QuartoError>{
         let input: usize = input.trim().parse().unwrap();
         game.nominate_piece(input);
 
-
         println!("Player {} place:", game.current_player());
 
         let mut input = String::new();
@@ -30,5 +31,7 @@ fn main() -> Result<(), QuartoError>{
         let row: usize = split[0].trim().parse().unwrap();
         let col: usize = split[1].trim().parse().unwrap();
         game.play(Position::from_coord(row, col).unwrap())?;
+
+        game.detect_win();
     }
 }
