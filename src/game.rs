@@ -1,16 +1,13 @@
-use crate::{
-    piece::Piece,
-    place::{Nominated, Placed, Position},
-};
+use crate::{piece::Piece, place::{Placed, Position}};
 
 #[derive(Debug, Default)]
 pub struct Game {
     remaining_pieces: Vec<Piece>,
     cur_board: [Option<usize>; 16],
     moves: Vec<Placed>,
-    next_player: usize,
+    next: (usize, usize), // Placer, Nominator
     player_count: usize,
-    nominated: Option<Nominated>,
+    nominated: Option<usize>,
 }
 
 impl Game {
@@ -19,22 +16,28 @@ impl Game {
             remaining_pieces: Piece::all_pieces(),
             cur_board: [None; 16],
             moves: Vec::new(),
-            next_player: 0,
+            next: (0, player_count - 1),
             player_count,
             nominated: None,
         }
     }
 
-    pub fn nominated(&self) -> Option<&Nominated> {
-        self.nominated.as_ref()
+    #[inline]
+    pub fn nominated(&self) -> Option<Piece> {
+        self.nominated.as_ref().map(|x| *self.remaining_pieces.get(*x).unwrap())
     }
 
-    pub fn nominate_piece(&mut self, nom: Nominated) -> &mut Nominated {
-        self.nominated.insert(nom)
+    #[inline]
+    pub fn nominate_piece(&mut self, nom : usize) -> Option<Piece> {
+        let _ = self.nominated.insert(nom);
+        self.nominated()
     }
 
-    pub fn play(&mut self, pos: Position) -> Result<usize, QuartoError> {
-        let placed = Placed::from_nominated(self.nominated.ok_or(QuartoError::NoneNominated)?, pos);
+    pub fn play(&mut self, pos: Position) -> Result<(), QuartoError> {
+        let nominated = self.nominated.ok_or(QuartoError::NoneNominated)?;
+        let to_play = self.remaining_pieces.remove(nominated);
+
+        let placed = Placed::from_nominated(to_play, pos);
         let index = pos.to_index();
         let next_turn = self.moves.len();
 
@@ -42,14 +45,29 @@ impl Game {
         match square {
             Some(_) => Err(QuartoError::OccupiedSquare)?,
             None => {
-                square.insert(next_turn);
+                let _ = square.insert(next_turn);
                 self.moves.push(placed);
             },
         };
 
-        self.next_player += 1;
-        Ok(self.next_player)
+        self.next = ((self.next.0 + 1) % self.player_count, self.next.0);
+        Ok(())
     }
+
+    #[inline]
+    pub fn current_nominator(&self) -> usize {
+        self.next.1
+    }
+
+    #[inline]
+    pub fn current_player(&self) -> usize {
+        self.next.0
+    }
+
+    pub fn remaining_pieces(&self) -> &Vec<Piece>{
+        &self.remaining_pieces
+    }
+
 }
 
 #[derive(Debug, Clone, Copy)]

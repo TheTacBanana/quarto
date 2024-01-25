@@ -19,7 +19,7 @@ impl Into<u8> for Feature {
 }
 
 impl Feature {
-    pub const fn left() -> Vec<Feature> {
+    pub fn left() -> Vec<Feature> {
         use Feature::*;
         vec![
             Tall,
@@ -29,7 +29,7 @@ impl Feature {
         ]
     }
 
-    pub const fn right() -> Vec<Feature> {
+    pub fn right() -> Vec<Feature> {
         use Feature::*;
         vec![
             Short,

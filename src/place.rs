@@ -18,19 +18,10 @@ impl Position {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct Nominated(Piece);
-
-impl Nominated {
-    pub fn new(piece: Piece) -> Self {
-        Nominated(piece)
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
 pub struct Placed(Piece, Position);
 
 impl Placed {
-    pub fn from_nominated(nominated: Nominated, pos : Position) -> Self {
-        Placed(nominated.0, pos)
+    pub fn from_nominated(nominated: Piece, pos : Position) -> Self {
+        Placed(nominated, pos)
     }
 }
