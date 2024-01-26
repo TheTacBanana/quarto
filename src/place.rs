@@ -11,7 +11,7 @@ impl Position {
     pub fn from_coord(row : impl Into<usize>, col : impl Into<usize>) -> Option<Self> {
         match (row.into(),col.into()) {
             (r,c) if (0..4).contains(&r) && (0..4).contains(&c) => {
-                Some(Position(c * 4 + r))
+                Some(Position(r * 4 + c))
             }
             _ => {
                 None
