@@ -93,3 +93,67 @@ pub enum QuartoError {
     NoneNominated,
     OccupiedSquare,
 }
+
+pub mod tests {
+    use crate::*;
+
+    #[test]
+    pub fn row() {
+        let mut game = Game::new(2);
+
+        game.nominate_piece(0);
+        game.place(Position::from_coord(1usize, 0usize).unwrap())
+            .unwrap();
+
+        assert!(game.detect_win() == false, "Invalid");
+
+        game.nominate_piece(1);
+        game.place(Position::from_coord(1usize, 1usize).unwrap())
+            .unwrap();
+
+        assert!(game.detect_win() == false, "Invalid");
+
+        game.nominate_piece(2);
+        game.place(Position::from_coord(1usize, 2usize).unwrap())
+            .unwrap();
+
+        assert!(game.detect_win() == false, "Invalid");
+
+        game.nominate_piece(3);
+        game.place(Position::from_coord(1usize, 3usize).unwrap())
+            .unwrap();
+
+        assert!(game.detect_win() == true, "Didnt detect");
+    }
+
+    #[test]
+    pub fn col() {
+        let mut game = Game::new(2);
+
+        game.nominate_piece(0);
+        game.place(Position::from_coord(0usize, 1usize).unwrap())
+            .unwrap();
+
+        assert!(game.detect_win() == false, "Invalid");
+
+        game.nominate_piece(1);
+        game.place(Position::from_coord(1usize, 1usize).unwrap())
+            .unwrap();
+
+        assert!(game.detect_win() == false, "Invalid");
+
+        game.nominate_piece(2);
+        game.place(Position::from_coord(2usize, 1usize).unwrap())
+            .unwrap();
+
+        assert!(game.detect_win() == false, "Invalid");
+
+        game.nominate_piece(3);
+        game.place(Position::from_coord(3usize, 1usize).unwrap())
+            .unwrap();
+
+        println!("{:?}", game.moves);
+
+        assert!(game.detect_win() == true, "Didnt detect");
+    }
+}
