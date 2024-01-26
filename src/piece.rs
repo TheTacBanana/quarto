@@ -1,7 +1,15 @@
+use std::fmt::Debug;
+
 use crate::feat::Feature;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Piece(pub u8);
+
+impl Debug for Piece {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:b}", self.0)
+    }
+}
 
 impl Piece {
     pub fn from_feat(f1: Feature, f2: Feature, f3: Feature, f4: Feature) -> Self {
