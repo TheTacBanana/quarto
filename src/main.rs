@@ -1,4 +1,5 @@
 #![feature(iter_array_chunks)]
+#![feature(get_many_mut)]
 
 use std::io;
 
@@ -30,7 +31,7 @@ fn main() -> Result<(), QuartoError>{
         let split = input.split(",").collect::<Vec<_>>();
         let row: usize = split[0].trim().parse().unwrap();
         let col: usize = split[1].trim().parse().unwrap();
-        game.play(Position::from_coord(row, col).unwrap())?;
+        game.place(Position::from_coord(row, col).unwrap())?;
 
         game.detect_win();
     }
