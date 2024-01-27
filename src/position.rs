@@ -1,4 +1,3 @@
-use crate::piece::Piece;
 
 // 0  1  2  3
 // 4  5  6  7
@@ -19,16 +18,8 @@ impl Position {
         }
     }
 
+    #[inline]
     pub fn to_index(&self) -> usize {
         self.0
-    }
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Placed(pub Piece, pub Position);
-
-impl Placed {
-    pub fn from_nominated(nominated: Piece, pos : Position) -> Self {
-        Placed(nominated, pos)
     }
 }

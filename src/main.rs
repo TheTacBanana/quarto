@@ -1,38 +1,43 @@
 #![feature(iter_array_chunks)]
 #![feature(get_many_mut)]
 
-use std::io;
+use board::QuartoError;
+use game::Game;
 
-use game::{Game, QuartoError};
-
-use crate::place::Position;
+use crate::position::Position;
 
 pub mod feat;
 pub mod game;
 pub mod piece;
-pub mod place;
+pub mod position;
+pub mod player;
+pub mod board;
 
 fn main() -> Result<(), QuartoError>{
-    let mut game = Game::new(2);
+    let mut game = Game::new(Vec::new());
 
-    loop {
-        println!("Player {} nominate:", game.current_nominator());
-        println!("Remaining Pieces: {:?}", game.remaining_pieces().len());
 
-        let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
-        let input: usize = input.trim().parse().unwrap();
-        game.nominate_piece(input);
+    Ok(())
+    // println!("{:?}", Piece::all_pieces().iter().map(|x| format!("{:#8b}",x.0)).collect::<Vec<_>>());
 
-        println!("Player {} place:", game.current_player());
+    // loop {
+    //     println!("Player {} nominate:", game.current_nominator());
+    //     println!("Remaining Pieces: {:?}", game.remaining_pieces().len());
 
-        let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
-        let split = input.split(",").collect::<Vec<_>>();
-        let row: usize = split[0].trim().parse().unwrap();
-        let col: usize = split[1].trim().parse().unwrap();
-        game.place(Position::from_coord(row, col).unwrap())?;
+    //     let mut input = String::new();
+    //     io::stdin().read_line(&mut input).unwrap();
+    //     let input: usize = input.trim().parse().unwrap();
+    //     game.nominate_piece(input);
 
-        game.detect_win();
-    }
+    //     println!("Player {} place:", game.current_player());
+
+    //     let mut input = String::new();
+    //     io::stdin().read_line(&mut input).unwrap();
+    //     let split = input.split(",").collect::<Vec<_>>();
+    //     let row: usize = split[0].trim().parse().unwrap();
+    //     let col: usize = split[1].trim().parse().unwrap();
+    //     game.place(Position::from_coord(row, col).unwrap())?;
+
+    //     game.detect_win();
+    // }
 }
