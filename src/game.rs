@@ -1,3 +1,5 @@
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+
 use crate::{
     piece::Piece,
     place::{Placed, Position},
@@ -73,52 +75,33 @@ impl Game {
         &self.remaining_pieces
     }
 
+    pub fn check_four(&self, four: [usize; 4]) -> bool {
+        four.iter()
+            .map(|&x| self.cur_board.get(x).unwrap())
+            .try_fold(u8::MAX, |x, new| {
+                new.map(|y| {
+                    let piece = self.moves.get(y).unwrap();
+                    x & piece.0 .0
+                })
+            })
+            .is_some_and(|x| x > 0)
+    }
+
     pub fn detect_win(&self) -> bool {
-        let rows = self.cur_board.iter().array_chunks::<4>().any(|xs| {
-            xs.iter()
-                .try_fold(u8::MAX, |x, new| {
-                    new.map(|y| {
-                        let piece = self.moves.get(y).unwrap();
-                        x & piece.0 .0
-                    })
-                })
-                .is_some_and(|x| x > 0)
-        });
-
-        let mut cols = self.cur_board.iter().array_chunks::<4>().take(4);
-        let first = cols.next().unwrap();
-        let cols = first
-            .iter()
-            .zip(cols.next().unwrap())
-            .zip(cols.next().unwrap())
-            .zip(cols.next().unwrap());
-
-        let cols = cols.map(|(((&&a, &b), &c), &d)| (a, b, c, d)).any(|x| {
-            if let (Some(a), Some(b), Some(c), Some(d)) = x {
-                let a = self.moves.get(a).unwrap();
-                let b = self.moves.get(b).unwrap();
-                let c = self.moves.get(c).unwrap();
-                let d = self.moves.get(d).unwrap();
-
-                u8::MAX & a.0 .0 & b.0 .0 & c.0 .0 & d.0 .0 > 0
-            } else {
-                false
-            }
-        });
-
-        let diag = [[0, 5, 10, 15], [3, 6, 9, 12]].iter().any(|xs| {
-            xs.iter()
-                .map(|&x| {
-                    self.cur_board
-                        .get(x)
-                        .unwrap()
-                        .and_then(|x| self.moves.get(x))
-                })
-                .try_fold(u8::MAX, |x, new| new.map(|y| x & y.0 .0))
-                .is_some_and(|x| x > 0)
-        });
-
-        rows || cols || diag
+        [
+            [0, 1, 2, 3], // Rows
+            [4, 5, 6, 7],
+            [8, 9, 10, 11],
+            [12, 13, 14, 15],
+            [0, 4, 8, 12], // Cols
+            [1, 5, 9, 13],
+            [2, 6, 10, 14],
+            [3, 7, 11, 15],
+            [0, 5, 10, 15], // Back Diag
+            [3, 6, 9, 12],  // Forward Diag
+        ]
+        .par_iter()
+        .any(|&xs| self.check_four(xs))
     }
 }
 
