@@ -99,6 +99,18 @@ impl Game {
             [3, 7, 11, 15],
             [0, 5, 10, 15], // Back Diag
             [3, 6, 9, 12],  // Forward Diag
+
+            [0, 1, 4, 5], // Quads
+            [1, 2, 5, 6],
+            [2, 3, 6, 7],
+
+            [4, 5, 8, 9],
+            [5, 6, 9, 10],
+            [6, 7, 10, 11],
+
+            [8, 9, 12, 13],
+            [9, 10, 13, 14],
+            [10, 11, 14, 15]
         ]
         .par_iter()
         .any(|&xs| self.check_four(xs))
@@ -184,6 +196,23 @@ pub mod tests {
         assert!(game.detect_win() == false, "Invalid");
 
         play_piece(&mut game, 3, 3, 0);
+        assert!(game.detect_win() == true, "Didnt detect");
+    }
+
+    #[test]
+    pub fn quad() {
+        let mut game = Game::new(2);
+
+        play_piece(&mut game, 0, 1, 1);
+        assert!(game.detect_win() == false, "Invalid");
+
+        play_piece(&mut game, 1, 1, 2);
+        assert!(game.detect_win() == false, "Invalid");
+
+        play_piece(&mut game, 2, 2, 1);
+        assert!(game.detect_win() == false, "Invalid");
+
+        play_piece(&mut game, 3, 2, 2);
         assert!(game.detect_win() == true, "Didnt detect");
     }
 }
