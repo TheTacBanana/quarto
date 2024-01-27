@@ -2,7 +2,7 @@
 #![feature(get_many_mut)]
 
 use board::QuartoError;
-use game::Game;
+use game::{Game, GameError};
 
 use crate::position::Position;
 
@@ -13,31 +13,10 @@ pub mod position;
 pub mod player;
 pub mod board;
 
-fn main() -> Result<(), QuartoError>{
+fn main() -> Result<(), GameError>{
     let mut game = Game::new(Vec::new());
 
-
-    Ok(())
-    // println!("{:?}", Piece::all_pieces().iter().map(|x| format!("{:#8b}",x.0)).collect::<Vec<_>>());
-
-    // loop {
-    //     println!("Player {} nominate:", game.current_nominator());
-    //     println!("Remaining Pieces: {:?}", game.remaining_pieces().len());
-
-    //     let mut input = String::new();
-    //     io::stdin().read_line(&mut input).unwrap();
-    //     let input: usize = input.trim().parse().unwrap();
-    //     game.nominate_piece(input);
-
-    //     println!("Player {} place:", game.current_player());
-
-    //     let mut input = String::new();
-    //     io::stdin().read_line(&mut input).unwrap();
-    //     let split = input.split(",").collect::<Vec<_>>();
-    //     let row: usize = split[0].trim().parse().unwrap();
-    //     let col: usize = split[1].trim().parse().unwrap();
-    //     game.place(Position::from_coord(row, col).unwrap())?;
-
-    //     game.detect_win();
-    // }
+    loop {
+        pollster::block_on(game.next_turn())?
+    }
 }

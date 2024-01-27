@@ -1,38 +1,67 @@
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-
 use crate::{
-    board::Board, piece::Piece, player::QuartoPlayer, position::Position
+    board::{Board, QuartoError},
+    player::QuartoPlayer,
 };
 
 pub struct Game {
     next: (usize, usize), // Placer, Nominator
     players: Vec<Box<dyn QuartoPlayer>>,
-    current_board: Board,
+    board: Board,
 }
 
 impl Game {
-    pub fn new(players : Vec<Box<dyn QuartoPlayer>>) -> Self {
+    pub fn new(players: Vec<Box<dyn QuartoPlayer>>) -> Self {
         Game {
             next: (0, players.len() - 1),
             players,
-            current_board: Board::new(),
+            board: Board::new(),
         }
     }
 
-    pub fn next() {
+    #[inline]
+    fn placer(&self) -> usize {
+        self.next.0
+    }
 
+    #[inline]
+    fn nominator(&self) -> usize {
+        self.next.1
+    }
+
+    pub async fn next_turn(&mut self) -> Result<(), GameError> {
+        let n_id = self.nominator();
+        let nominator = self.players.get_mut(n_id).unwrap();
+        let nominated_piece = nominator.nominate(&self.board).await;
+        self.board.nominate_inplace(nominated_piece)?;
+
+        let p_id = self.placer();
+        let placer = self.players.get_mut(p_id).unwrap();
+        let placer_position = placer.place(&self.board).await;
+        self.board.place_inplace(placer_position)?;
+
+        Ok(())
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub enum GameError {
+    QuartoError(QuartoError),
+}
+
+impl From<QuartoError> for GameError {
+    fn from(value: QuartoError) -> Self {
+        GameError::QuartoError(value)
+    }
+}
 
 pub mod tests {
-    use crate::*;
-
-    use self::board::Board;
+    use crate::{board::Board, *};
 
     pub fn play_piece(board: &mut Board, n: usize, r: usize, c: usize) {
-        board.nominate_inplace(n);
-        board.place_inplace(Position::from_coord(r, c).unwrap()).unwrap();
+        board.nominate_inplace(n).unwrap();
+        board
+            .place_inplace(Position::from_coord(r, c).unwrap())
+            .unwrap();
     }
 
     #[test]
