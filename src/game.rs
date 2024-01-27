@@ -93,23 +93,20 @@ impl Game {
             .zip(cols.next().unwrap())
             .zip(cols.next().unwrap());
 
-        let cols = cols
-            .map(|(((&&a, &b), &c), &d)| (a, b, c, d))
-            .inspect(|x| println!("{:?}", x))
-            .any(|x| {
-                if let (Some(a), Some(b), Some(c), Some(d)) = x {
-                    let a = self.moves.get(a).unwrap();
-                    let b = self.moves.get(b).unwrap();
-                    let c = self.moves.get(c).unwrap();
-                    let d = self.moves.get(d).unwrap();
+        let cols = cols.map(|(((&&a, &b), &c), &d)| (a, b, c, d)).any(|x| {
+            if let (Some(a), Some(b), Some(c), Some(d)) = x {
+                let a = self.moves.get(a).unwrap();
+                let b = self.moves.get(b).unwrap();
+                let c = self.moves.get(c).unwrap();
+                let d = self.moves.get(d).unwrap();
 
-                    u8::MAX & a.0 .0 & b.0 .0 & c.0 .0 & d.0 .0 > 0
-                } else {
-                    false
-                }
-            });
+                u8::MAX & a.0 .0 & b.0 .0 & c.0 .0 & d.0 .0 > 0
+            } else {
+                false
+            }
+        });
 
-        let diag = [[0, 4, 10, 15], [3, 6, 9, 12]].iter().any(|xs| {
+        let diag = [[0, 5, 10, 15], [3, 6, 9, 12]].iter().any(|xs| {
             xs.iter()
                 .map(|&x| {
                     self.cur_board
@@ -134,32 +131,25 @@ pub enum QuartoError {
 pub mod tests {
     use crate::*;
 
+    pub fn play_piece(game: &mut Game, n: usize, r: usize, c: usize) {
+        game.nominate_piece(n);
+        game.place(Position::from_coord(r, c).unwrap()).unwrap();
+    }
+
     #[test]
     pub fn row() {
         let mut game = Game::new(2);
 
-        game.nominate_piece(0);
-        game.place(Position::from_coord(1usize, 0usize).unwrap())
-            .unwrap();
-
+        play_piece(&mut game, 0, 1, 0);
         assert!(game.detect_win() == false, "Invalid");
 
-        game.nominate_piece(1);
-        game.place(Position::from_coord(1usize, 1usize).unwrap())
-            .unwrap();
-
+        play_piece(&mut game, 1, 1, 1);
         assert!(game.detect_win() == false, "Invalid");
 
-        game.nominate_piece(2);
-        game.place(Position::from_coord(1usize, 2usize).unwrap())
-            .unwrap();
-
+        play_piece(&mut game, 2, 1, 2);
         assert!(game.detect_win() == false, "Invalid");
 
-        game.nominate_piece(3);
-        game.place(Position::from_coord(1usize, 3usize).unwrap())
-            .unwrap();
-
+        play_piece(&mut game, 3, 1, 3);
         assert!(game.detect_win() == true, "Didnt detect");
     }
 
@@ -167,30 +157,50 @@ pub mod tests {
     pub fn col() {
         let mut game = Game::new(2);
 
-        game.nominate_piece(0);
-        game.place(Position::from_coord(0usize, 1usize).unwrap())
-            .unwrap();
-
+        play_piece(&mut game, 0, 0, 1);
         assert!(game.detect_win() == false, "Invalid");
 
-        game.nominate_piece(1);
-        game.place(Position::from_coord(1usize, 1usize).unwrap())
-            .unwrap();
-
+        play_piece(&mut game, 1, 1, 1);
         assert!(game.detect_win() == false, "Invalid");
 
-        game.nominate_piece(2);
-        game.place(Position::from_coord(2usize, 1usize).unwrap())
-            .unwrap();
-
+        play_piece(&mut game, 2, 2, 1);
         assert!(game.detect_win() == false, "Invalid");
 
-        game.nominate_piece(3);
-        game.place(Position::from_coord(3usize, 1usize).unwrap())
-            .unwrap();
+        play_piece(&mut game, 3, 3, 1);
+        assert!(game.detect_win() == true, "Didnt detect");
+    }
 
-        println!("{:?}", game.moves);
+    #[test]
+    pub fn back_diag() {
+        let mut game = Game::new(2);
 
+        play_piece(&mut game, 0, 0, 0);
+        assert!(game.detect_win() == false, "Invalid");
+
+        play_piece(&mut game, 1, 1, 1);
+        assert!(game.detect_win() == false, "Invalid");
+
+        play_piece(&mut game, 2, 2, 2);
+        assert!(game.detect_win() == false, "Invalid");
+
+        play_piece(&mut game, 3, 3, 3);
+        assert!(game.detect_win() == true, "Didnt detect");
+    }
+
+    #[test]
+    pub fn forward_diag() {
+        let mut game = Game::new(2);
+
+        play_piece(&mut game, 0, 0, 3);
+        assert!(game.detect_win() == false, "Invalid");
+
+        play_piece(&mut game, 1, 1, 2);
+        assert!(game.detect_win() == false, "Invalid");
+
+        play_piece(&mut game, 2, 2, 1);
+        assert!(game.detect_win() == false, "Invalid");
+
+        play_piece(&mut game, 3, 3, 0);
         assert!(game.detect_win() == true, "Didnt detect");
     }
 }

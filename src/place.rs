@@ -17,7 +17,6 @@ impl Position {
                 None
             }
         }
-        
     }
 
     pub fn to_index(&self) -> usize {
