@@ -39,6 +39,8 @@ impl Game {
         let placer_position = placer.place(&self.board).await;
         self.board.place_inplace(placer_position)?;
 
+        self.next = ((self.next.0 + 1) % self.players.len(), self.next.0);
+
         Ok(())
     }
 }

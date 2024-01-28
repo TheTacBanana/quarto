@@ -1,12 +1,10 @@
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-
 use crate::{piece::Piece, position::Position};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Board {
     placed: u16,
     board: [u8; 16],
-    remaining: u16,
+    remaining_pieces: u16,
     nominated: Option<usize>,
 }
 
@@ -29,19 +27,33 @@ impl Board {
         Board {
             placed: 0,
             board: [0; 16],
-            remaining: u16::MAX,
+            remaining_pieces: u16::MAX,
             nominated: None,
         }
     }
 
+    pub fn board_bits(&self) -> &[u8; 16] {
+        &self.board
+    }
+
     #[inline]
     pub fn piece_bits(&self) -> u16 {
-        self.remaining
+        self.remaining_pieces
     }
 
     #[inline]
     pub fn space_bits(&self) -> u16 {
         self.placed
+    }
+
+    #[inline]
+    pub fn nominated_index(&self) -> Option<usize> {
+        self.nominated
+    }
+
+    #[inline]
+    pub fn nominated_piece(&self) -> Option<Piece> {
+        self.nominated.map(|x| Piece(Board::piece_order()[x]))
     }
 
     #[inline]
@@ -55,7 +67,7 @@ impl Board {
     }
 
     pub fn nominate_inplace(&mut self, piece: usize) -> Result<(), QuartoError> {
-        self.nominated = (self.remaining & 1 << piece != 0)
+        self.nominated = (self.remaining_pieces & 1 << piece != 0)
                 .then(|| Some(piece))
                 .ok_or(QuartoError::PieceNotAvailable)?;
         Ok(())
@@ -65,8 +77,8 @@ impl Board {
         Ok(Board {
             placed: self.placed,
             board: self.board,
-            remaining: self.remaining,
-            nominated: (self.remaining & 1 << piece != 0)
+            remaining_pieces: self.remaining_pieces,
+            nominated: (self.remaining_pieces & 1 << piece != 0)
                 .then(|| Some(piece))
                 .ok_or(QuartoError::PieceNotAvailable)?,
         })
@@ -80,6 +92,7 @@ impl Board {
         }
 
         self.placed |= 1 << i;
+        self.remaining_pieces = self.remaining_pieces & !(1 << nom);
         self.board[i] = Board::piece_order()[nom];
         Ok(())
     }
@@ -98,7 +111,7 @@ impl Board {
                 b[i] = Board::piece_order()[nom];
                 b
             },
-            remaining: self.remaining & !(1 << nom),
+            remaining_pieces: self.remaining_pieces & !(1 << nom),
             nominated: None,
         })
     }
@@ -139,7 +152,7 @@ impl Board {
             [9, 10, 13, 14],
             [10, 11, 14, 15]
         ]
-        .par_iter()
+        .iter()
         .any(|&xs| self.check_four(xs))
     }
 }
