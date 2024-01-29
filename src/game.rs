@@ -1,3 +1,8 @@
+use std::time::{Duration, Instant};
+
+use async_std::future::timeout;
+use futures::future;
+
 use crate::{
     board::{Board, QuartoError},
     player::QuartoPlayer,
@@ -6,6 +11,7 @@ use crate::{
 pub struct Game {
     next: (usize, usize), // Placer, Nominator
     players: Vec<Box<dyn QuartoPlayer>>,
+    connected_players: Vec<usize>,
     board: Board,
 }
 
@@ -14,21 +20,36 @@ impl Game {
         Game {
             next: (0, players.len() - 1),
             players,
+            connected_players: Vec::new(),
             board: Board::new(),
         }
     }
 
     #[inline]
-    fn placer(&self) -> usize {
+    pub fn placer(&self) -> usize {
         self.next.0
     }
 
     #[inline]
-    fn nominator(&self) -> usize {
+    pub fn nominator(&self) -> usize {
         self.next.1
     }
 
-    pub async fn next_turn(&mut self) -> Result<(), GameError> {
+    pub async fn connect(&mut self) {
+        const TIMEOUT : Duration = Duration::from_secs(5);
+        for (i, p) in self.players.iter_mut().enumerate() {
+            match timeout(TIMEOUT, p.connect()).await {
+                Ok(_) => {
+                    println!("Successful connection {}", i);
+                },
+                Err(_) => {
+                    println!("Failed connection {}", i);
+                },
+            }
+        }
+    }
+
+    pub async fn next_turn(&mut self) -> Result<bool, GameError> {
         let n_id = self.nominator();
         let nominator = self.players.get_mut(n_id).unwrap();
         let nominated_piece = nominator.nominate(&self.board).await;
@@ -39,9 +60,30 @@ impl Game {
         let placer_position = placer.place(&self.board).await;
         self.board.place_inplace(placer_position)?;
 
-        self.next = ((self.next.0 + 1) % self.players.len(), self.next.0);
+        if self.board.detect_win() {
+            return Ok(false);
+        }
 
-        Ok(())
+        self.next = (
+            (self.next.0 + 1) % self.connected_players.len(),
+            self.next.0,
+        );
+
+        Ok(true)
+    }
+
+    pub async fn disconnect(&mut self) {
+        const TIMEOUT : Duration = Duration::from_secs(5);
+        for (i, p) in self.players.iter_mut().enumerate() {
+            match timeout(TIMEOUT, p.disconnect()).await {
+                Ok(_) => {
+                    println!("Successful disconnection {}", i);
+                },
+                Err(_) => {
+                    println!("Failed disconnection {}", i);
+                },
+            }
+        }
     }
 }
 

@@ -1,7 +1,7 @@
 #![feature(iter_array_chunks)]
 #![feature(get_many_mut)]
+#![feature(async_closure)]
 
-use board::QuartoError;
 use game::{Game, GameError};
 use player::CliPlayer;
 
@@ -20,7 +20,17 @@ fn main() -> Result<(), GameError> {
         Box::new(CliPlayer::new("Zoe".to_string())),
     ]);
 
+    pollster::block_on(game.connect());
+
     loop {
-        pollster::block_on(game.next_turn())?
+        let turn_result = pollster::block_on(game.next_turn())?;
+        if !turn_result {
+            println!("Game won by {}", game.placer());
+            break;
+        }
     }
+
+    pollster::block_on(game.disconnect());
+
+    Ok(())
 }
