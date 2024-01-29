@@ -1,7 +1,6 @@
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use async_std::future::timeout;
-use futures::future;
 
 use crate::{
     board::{Board, QuartoError},

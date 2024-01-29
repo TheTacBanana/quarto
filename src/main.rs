@@ -8,7 +8,6 @@ use player::CliPlayer;
 use crate::position::Position;
 
 pub mod board;
-pub mod feat;
 pub mod game;
 pub mod piece;
 pub mod player;
