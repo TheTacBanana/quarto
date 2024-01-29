@@ -14,28 +14,28 @@ pub mod player;
 pub mod position;
 
 fn main() -> Result<(), GameError> {
-    let mut game = Game::new(vec![
-        Box::new(CliPlayer::new("Eris".to_string())),
-        Box::new(CliPlayer::new("Zoe".to_string())),
-    ]);
+    let mut game = Game::new(
+        CliPlayer::new("Eris".to_string()),
+        CliPlayer::new("Zoe".to_string()),
+    );
 
-    pollster::block_on(game.connect());
+    pollster::block_on(game.connect())?;
 
     loop {
-        match pollster::block_on(game.next_turn())?{
+        match pollster::block_on(game.next_turn())? {
             GameState::Win(p) => {
                 println!("Game won by {}", p);
                 break;
-            },
+            }
             GameState::Draw => {
                 println!("Game is a draw");
                 break;
-            },
+            }
             GameState::Continue => (),
         }
     }
 
-    pollster::block_on(game.disconnect());
+    pollster::block_on(game.disconnect())?;
 
     Ok(())
 }

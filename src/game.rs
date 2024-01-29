@@ -1,6 +1,7 @@
 use std::time::Duration;
 
-use async_std::future::timeout;
+use async_std::future::{timeout, TimeoutError};
+use futures::future::join_all;
 
 use crate::{
     board::{Board, QuartoError},
@@ -8,86 +9,78 @@ use crate::{
 };
 
 pub struct Game {
-    next: (usize, usize), // Placer, Nominator
-    players: Vec<Box<dyn QuartoPlayer>>,
-    connected_players: Vec<usize>,
     board: Board,
+    players: [Box<dyn QuartoPlayer>; 2],
+    next: u8,
 }
 
 impl Game {
-    pub fn new(players: Vec<Box<dyn QuartoPlayer>>) -> Self {
+    pub const CONN_TIMEOUT: Duration = Duration::from_secs(5);
+
+    pub fn new(p1: impl QuartoPlayer, p2: impl QuartoPlayer) -> Self {
         Game {
-            next: (0, players.len() - 1),
-            players,
-            connected_players: Vec::new(),
+            players: [Box::new(p1), Box::new(p2)],
             board: Board::new(),
+            next: 0b10,
         }
     }
 
-    #[inline]
-    pub fn placer(&self) -> usize {
-        self.next.0
+    pub async fn connect(&mut self) -> Result<(), GameError> {
+        timeout(
+            Game::CONN_TIMEOUT,
+            join_all(self.players.iter_mut().map(|x| x.connect())),
+        )
+        .await?
+        .iter()
+        .all(|x| x.is_ok())
+        .then(|| ())
+        .ok_or(GameError::FailedConnection)
     }
 
     #[inline]
     pub fn nominator(&self) -> usize {
-        self.next.1
+        self.next.trailing_zeros() as usize
     }
 
-    pub async fn connect(&mut self) {
-        const TIMEOUT : Duration = Duration::from_secs(5);
-        for (i, p) in self.players.iter_mut().enumerate() {
-            match timeout(TIMEOUT, p.connect()).await {
-                Ok(_) => {
-                    println!("Successful connection {}", i);
-                },
-                Err(_) => {
-                    println!("Failed connection {}", i);
-                },
-            }
-        }
+    #[inline]
+    pub fn placer(&self) -> usize {
+        self.next.trailing_ones() as usize
     }
 
     pub async fn next_turn(&mut self) -> Result<GameState, GameError> {
         let n_id = self.nominator();
         let nominator = self.players.get_mut(n_id).unwrap();
-        let nominated_piece = nominator.nominate(&self.board).await;
+        let nominated_piece = timeout(Game::CONN_TIMEOUT, nominator.nominate(&self.board)).await?;
         self.board.nominate_inplace(nominated_piece)?;
 
         let p_id = self.placer();
         let placer = self.players.get_mut(p_id).unwrap();
-        let placer_position = placer.place(&self.board).await;
+        let placer_position = timeout(Game::CONN_TIMEOUT, placer.place(&self.board)).await?;
         self.board.place_inplace(placer_position)?;
 
         if self.board.detect_win() {
             return Ok(GameState::Win(self.placer()));
         }
 
-        self.next = (
-            (self.next.0 + 1) % self.connected_players.len(),
-            self.next.0,
-        );
+        self.next ^= 3;
 
         if self.board.piece_bits() == 0 {
             Ok(GameState::Draw)
         } else {
             Ok(GameState::Continue)
         }
-
     }
 
-    pub async fn disconnect(&mut self) {
-        const TIMEOUT : Duration = Duration::from_secs(5);
-        for (i, p) in self.players.iter_mut().enumerate() {
-            match timeout(TIMEOUT, p.disconnect()).await {
-                Ok(_) => {
-                    println!("Successful disconnection {}", i);
-                },
-                Err(_) => {
-                    println!("Failed disconnection {}", i);
-                },
-            }
-        }
+    pub async fn disconnect(&mut self) -> Result<(), GameError> {
+        timeout(
+            Game::CONN_TIMEOUT,
+            join_all(self.players.iter_mut().map(|x| x.connect())),
+        )
+        .await?
+        .iter()
+        .all(|x| x.is_ok())
+        .then(|| ())
+        .ok_or(GameError::FailedConnection)
     }
 }
 
@@ -101,6 +94,15 @@ pub enum GameState {
 #[derive(Debug, Clone, Copy)]
 pub enum GameError {
     QuartoError(QuartoError),
+    FailedConnection,
+    BadDisconnect,
+    ConnectionTimeout,
+}
+
+impl From<TimeoutError> for GameError {
+    fn from(_value: TimeoutError) -> Self {
+        GameError::ConnectionTimeout
+    }
 }
 
 impl From<QuartoError> for GameError {
