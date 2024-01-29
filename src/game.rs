@@ -48,7 +48,7 @@ impl Game {
         }
     }
 
-    pub async fn next_turn(&mut self) -> Result<bool, GameError> {
+    pub async fn next_turn(&mut self) -> Result<GameState, GameError> {
         let n_id = self.nominator();
         let nominator = self.players.get_mut(n_id).unwrap();
         let nominated_piece = nominator.nominate(&self.board).await;
@@ -60,7 +60,7 @@ impl Game {
         self.board.place_inplace(placer_position)?;
 
         if self.board.detect_win() {
-            return Ok(false);
+            return Ok(GameState::Win(self.placer()));
         }
 
         self.next = (
@@ -68,7 +68,12 @@ impl Game {
             self.next.0,
         );
 
-        Ok(true)
+        if self.board.piece_bits() == 0 {
+            Ok(GameState::Draw)
+        } else {
+            Ok(GameState::Continue)
+        }
+
     }
 
     pub async fn disconnect(&mut self) {
@@ -84,6 +89,13 @@ impl Game {
             }
         }
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum GameState {
+    Win(usize),
+    Draw,
+    Continue,
 }
 
 #[derive(Debug, Clone, Copy)]

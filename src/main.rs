@@ -2,7 +2,7 @@
 #![feature(get_many_mut)]
 #![feature(async_closure)]
 
-use game::{Game, GameError};
+use game::{Game, GameError, GameState};
 use player::CliPlayer;
 
 use crate::position::Position;
@@ -22,10 +22,16 @@ fn main() -> Result<(), GameError> {
     pollster::block_on(game.connect());
 
     loop {
-        let turn_result = pollster::block_on(game.next_turn())?;
-        if !turn_result {
-            println!("Game won by {}", game.placer());
-            break;
+        match pollster::block_on(game.next_turn())?{
+            GameState::Win(p) => {
+                println!("Game won by {}", p);
+                break;
+            },
+            GameState::Draw => {
+                println!("Game is a draw");
+                break;
+            },
+            GameState::Continue => (),
         }
     }
 
