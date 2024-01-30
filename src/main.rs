@@ -10,11 +10,11 @@ pub mod piece;
 pub mod player;
 pub mod position;
 pub mod runner;
-pub mod minmax;
+pub mod minimax;
 
 fn main() {
     let result = pollster::block_on(
-        GameRunner::new(u16::MAX as usize, || Game::new(RandomPlayer, RandomPlayer)).run(),
+        GameRunner::new(u32::MAX as usize, || Game::new(RandomPlayer, RandomPlayer)).run(),
     );
     println!("{:?}", result);
 }
