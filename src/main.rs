@@ -10,6 +10,7 @@ pub mod piece;
 pub mod player;
 pub mod position;
 pub mod runner;
+pub mod minmax;
 
 fn main() {
     let result = pollster::block_on(

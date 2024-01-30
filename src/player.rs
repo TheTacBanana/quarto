@@ -26,7 +26,6 @@ impl CliPlayer {
 #[async_trait]
 impl QuartoPlayer for CliPlayer {
     async fn connect(&mut self) -> Result<(), ()> {
-        println!("{} connected", self.name);
         Ok(())
     }
 
@@ -56,7 +55,6 @@ impl QuartoPlayer for CliPlayer {
     }
 
     async fn disconnect(&mut self) -> Result<(), ()> {
-        println!("Goodbye {}", self.name);
         Ok(())
     }
 }
@@ -66,7 +64,6 @@ pub struct RandomPlayer;
 #[async_trait]
 impl QuartoPlayer for RandomPlayer {
     async fn connect(&mut self) -> Result<(), ()> {
-        println!("RandomPlayer connected");
         Ok(())
     }
 
@@ -99,7 +96,6 @@ impl QuartoPlayer for RandomPlayer {
     }
 
     async fn disconnect(&mut self) -> Result<(), ()> {
-        println!("Goodbye RandomPlayer");
         Ok(())
     }
 }
