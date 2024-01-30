@@ -1,4 +1,3 @@
-
 // 0  1  2  3
 // 4  5  6  7
 // 8  9  10 11
@@ -11,6 +10,17 @@ impl Position {
         match (row.into(),col.into()) {
             (r,c) if (0..4).contains(&r) && (0..4).contains(&c) => {
                 Some(Position(r * 4 + c))
+            }
+            _ => {
+                None
+            }
+        }
+    }
+
+    pub fn from_index(index : impl Into<usize>) -> Option<Self> {
+        match index.into() {
+            i if (0..16).contains(&i) => {
+                Some(Position(i))
             }
             _ => {
                 None

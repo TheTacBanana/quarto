@@ -25,6 +25,21 @@ impl Game {
         }
     }
 
+    pub async fn run(&mut self) -> Result<GameResult, GameError> {
+        pollster::block_on(self.connect())?;
+
+        loop {
+            match pollster::block_on(self.next_turn())? {
+                GameState::Finished(res) => {
+                    println!("{:?}", res);
+                    pollster::block_on(self.disconnect())?;
+                    return Ok(res)
+                }
+                GameState::Continue => (),
+            }
+        }
+    }
+
     pub async fn connect(&mut self) -> Result<(), GameError> {
         timeout(
             Game::CONN_TIMEOUT,
@@ -59,13 +74,13 @@ impl Game {
         self.board.place_inplace(placer_position)?;
 
         if self.board.detect_win() {
-            return Ok(GameState::Win(self.placer()));
+            return Ok(GameState::Finished(GameResult::Win(self.placer())));
         }
 
         self.next ^= 3;
 
         if self.board.piece_bits() == 0 {
-            Ok(GameState::Draw)
+            Ok(GameState::Finished(GameResult::Draw))
         } else {
             Ok(GameState::Continue)
         }
@@ -86,9 +101,14 @@ impl Game {
 
 #[derive(Debug, Clone, Copy)]
 pub enum GameState {
+    Finished(GameResult),
+    Continue,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum GameResult {
     Win(usize),
     Draw,
-    Continue,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -112,7 +132,7 @@ impl From<QuartoError> for GameError {
 }
 
 pub mod tests {
-    use crate::{board::Board, *};
+    use crate::{board::Board, position::Position};
 
     pub fn play_piece(board: &mut Board, n: usize, r: usize, c: usize) {
         board.nominate_inplace(n).unwrap();
