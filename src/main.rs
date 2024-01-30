@@ -2,9 +2,7 @@
 #![feature(get_many_mut)]
 #![feature(async_closure)]
 
-use runner::GameRunner;
-
-use crate::{game::Game, player::RandomPlayer};
+use crate::{game::Game, player::RandomPlayer, runner::GameRunner};
 
 pub mod board;
 pub mod game;
@@ -14,7 +12,8 @@ pub mod position;
 pub mod runner;
 
 fn main() {
-    let result = GameRunner::new(u16::MAX as usize, || Game::new(RandomPlayer, RandomPlayer)).run();
-
+    let result = pollster::block_on(
+        GameRunner::new(u16::MAX as usize, || Game::new(RandomPlayer, RandomPlayer)).run(),
+    );
     println!("{:?}", result);
 }
