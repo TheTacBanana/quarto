@@ -72,11 +72,7 @@ impl QuartoPlayer for RandomPlayer {
     }
 
     async fn nominate(&mut self, board: &Board) -> usize {
-        let bits = board.piece_bits();
-        let pieces : Vec<usize> = (0..16)
-            .into_iter()
-            .filter_map(|x| if bits & 1 << x > 0 { Some(x) } else { None }).collect();
-
+        let pieces = board.piece_indexes();
         let mut rng = rand::thread_rng();
         let piece_index: usize = rng.gen::<u32>() as usize % pieces.len();
 
@@ -84,11 +80,7 @@ impl QuartoPlayer for RandomPlayer {
     }
 
     async fn place(&mut self, board: &Board) -> Position {
-        let bits = !board.space_bits();
-        let spaces : Vec<usize> = (0..16)
-            .into_iter()
-            .filter_map(|x| if bits & 1 << x > 0 { Some(x) } else { None }).collect();
-
+        let spaces = board.free_spaces();
         let mut rng = rand::thread_rng();
         let piece_index: usize = rng.gen::<u32>() as usize % spaces.len();
 

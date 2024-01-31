@@ -2,7 +2,7 @@
 #![feature(get_many_mut)]
 #![feature(async_closure)]
 
-use crate::{game::Game, player::RandomPlayer, runner::GameRunner};
+use crate::{game::Game, minimax::MinimaxPlayer, player::RandomPlayer, runner::GameRunner};
 
 pub mod board;
 pub mod game;
@@ -14,7 +14,7 @@ pub mod minimax;
 
 fn main() {
     let result = pollster::block_on(
-        GameRunner::new(u32::MAX as usize, || Game::new(RandomPlayer, RandomPlayer)).run(),
+        GameRunner::new(4, || Game::new(MinimaxPlayer, RandomPlayer)).run(),
     );
     println!("{:?}", result);
 }
