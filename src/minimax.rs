@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use ordered_float::OrderedFloat;
+use rand::Rng;
 
 use crate::{board::Board, player::QuartoPlayer, position::Position};
 
@@ -9,7 +10,7 @@ impl MinimaxPlayer {
     pub const MAX_DEPTH: usize = 5;
 
     pub fn maxi_place(&self, depth: usize, board: &Board) -> f32 {
-        if depth == 0 {
+        if depth == 0 || board.detect_win(){
             return self.evaluate_board(board);
         }
         board
@@ -23,7 +24,7 @@ impl MinimaxPlayer {
     }
 
     pub fn maxi_nominate(&self, depth: usize, board: &Board) -> f32 {
-        if depth == 0 {
+        if depth == 0 || board.detect_win(){
             return self.evaluate_board(board);
         }
         board
@@ -37,7 +38,7 @@ impl MinimaxPlayer {
     }
 
     pub fn mini_place(&self, depth: usize, board: &Board) -> f32 {
-        if depth == 0 {
+        if depth == 0 || board.detect_win(){
             return -self.evaluate_board(board);
         }
         board
@@ -48,19 +49,16 @@ impl MinimaxPlayer {
             .min()
             .unwrap()
             .0
-
     }
 
     pub fn mini_nominate(&self, depth: usize, board: &Board) -> f32 {
-        if depth == 0 {
+        if depth == 0 || board.detect_win(){
             return -self.evaluate_board(board);
         }
         board
             .piece_indexes()
             .iter()
-            .map(|i| {
-                board.nominate(*i).unwrap()
-            })
+            .map(|i| board.nominate(*i).unwrap())
             .map(|b| OrderedFloat(self.maxi_place(depth - 1, &b)))
             .min()
             .unwrap()
@@ -68,32 +66,52 @@ impl MinimaxPlayer {
     }
 
     pub fn nominate(&mut self, board: &Board) -> usize {
-        board
+        let moves = board
             .piece_indexes()
             .drain(..)
             .map(|piece| {
                 let board = board.nominate(piece).unwrap();
-                (piece, OrderedFloat(self.mini_place(Self::MAX_DEPTH, &board)))
-            })
-            .max_by_key(|x| x.1)
-            .inspect(|x| println!("Nominate {:?}", x) )
-            .unwrap()
-            .0
+                (
+                    piece,
+                    OrderedFloat(self.maxi_nominate(Self::MAX_DEPTH, &board)),
+                )
+            }).collect::<Vec<_>>();
+
+        println!("{:?}", moves);
+
+        let max = moves.iter().max_by_key(|x| x.1).unwrap();
+        let moves = moves.iter().filter(|x| x.1 == max.1).collect::<Vec<_>>();
+
+        let mut rng = rand::thread_rng();
+        let index: usize = rng.gen::<u32>() as usize % moves.len();
+        let m = moves.get(index).unwrap();
+        println!("Nominate {:?}", m);
+        m.0
     }
 
     pub fn place(&mut self, board: &Board) -> Position {
-        board
+        let moves = board
             .free_spaces()
             .drain(..)
             .map(|space| {
                 let pos = Position::from_index(space).unwrap();
                 let board = board.place(pos).unwrap();
-                (pos, OrderedFloat(self.maxi_nominate(Self::MAX_DEPTH, &board)))
-            })
-            .max_by_key(|x| x.1)
-            .inspect(|x| println!("Place {:?}", x) )
-            .unwrap()
-            .0
+                (
+                    pos,
+                    OrderedFloat(self.maxi_nominate(Self::MAX_DEPTH, &board)),
+                )
+            }).collect::<Vec<_>>();
+
+        println!("{:?}", moves);
+
+        let max = moves.iter().max_by_key(|x| x.1).unwrap();
+        let moves = moves.iter().filter(|x| x.1 == max.1).collect::<Vec<_>>();
+
+        let mut rng = rand::thread_rng();
+        let index: usize = rng.gen::<u32>() as usize % moves.len();
+        let m = moves.get(index).unwrap();
+        println!("Nominate {:?}", m);
+        m.0
     }
 
     pub fn evaluate_board(&self, board: &Board) -> f32 {
@@ -106,12 +124,16 @@ impl MinimaxPlayer {
             .enumerate()
             .map(|(i, xs)| {
                 let xs = xs.iter().filter_map(|&x| board.get_square_index(x));
-                let n = xs.count();
-                (i, n)
+                let common = xs.fold(u8::MAX, |x, y| x & y.0);
+                let score = common.count_ones() as f32;
+                (i, score)
             })
-            .max_by(|l, r| l.1.cmp(&r.1))
+            .max_by(|l, r| {
+                l.1.total_cmp(&r.1)
+            })
             .unwrap();
-        count.1 as f32
+
+        (16 - board.placed_count()) as f32 + count.1
     }
 }
 
