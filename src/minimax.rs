@@ -60,7 +60,7 @@ impl MinimaxPlayer {
             .iter()
             .map(|i| board.nominate(*i).unwrap())
             .map(|b| OrderedFloat(self.maxi_place(depth - 1, &b)))
-            .min()
+            .max()
             .unwrap()
             .0
     }
@@ -77,15 +77,12 @@ impl MinimaxPlayer {
                 )
             }).collect::<Vec<_>>();
 
-        println!("{:?}", moves);
-
         let max = moves.iter().max_by_key(|x| x.1).unwrap();
         let moves = moves.iter().filter(|x| x.1 == max.1).collect::<Vec<_>>();
 
         let mut rng = rand::thread_rng();
         let index: usize = rng.gen::<u32>() as usize % moves.len();
         let m = moves.get(index).unwrap();
-        println!("Nominate {:?}", m);
         m.0
     }
 
@@ -102,15 +99,12 @@ impl MinimaxPlayer {
                 )
             }).collect::<Vec<_>>();
 
-        println!("{:?}", moves);
-
         let max = moves.iter().max_by_key(|x| x.1).unwrap();
         let moves = moves.iter().filter(|x| x.1 == max.1).collect::<Vec<_>>();
 
         let mut rng = rand::thread_rng();
         let index: usize = rng.gen::<u32>() as usize % moves.len();
         let m = moves.get(index).unwrap();
-        println!("Nominate {:?}", m);
         m.0
     }
 

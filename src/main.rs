@@ -14,7 +14,7 @@ pub mod minimax;
 
 fn main() {
     let result = pollster::block_on(
-        GameRunner::new(4, || Game::new(MinimaxPlayer, RandomPlayer)).run(),
+        GameRunner::new(16, || Game::new(MinimaxPlayer, RandomPlayer)).run(),
     );
     println!("{:?}", result);
 }

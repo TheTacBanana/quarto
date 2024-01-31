@@ -31,7 +31,7 @@ impl Game {
         loop {
             match pollster::block_on(self.next_turn())? {
                 GameState::Finished(res) => {
-                    println!("{:?}", self.board);
+                    println!("{:?} {:?}", self.board, res);
                     pollster::block_on(self.disconnect())?;
                     return Ok(res)
                 }
