@@ -13,3 +13,8 @@ ordered-float = "4.2.0"
 pollster = "0.3.0"
 rand = "0.8.5"
 rayon = "1.8.1"
+reqwest = "0.11.23"
+serde = "1.0.196"
+serde_json = "1.0.113"
+tokio = {version = "1.35.1", features = ["full"] }
+ws = "0.9.2"

@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use ordered_float::OrderedFloat;
 use rand::Rng;
+use rayon::iter::{ParallelDrainRange, ParallelIterator};
 
 use crate::{board::Board, player::QuartoPlayer, position::Position};
 
@@ -68,7 +69,7 @@ impl MinimaxPlayer {
     pub fn nominate(&mut self, board: &Board) -> usize {
         let moves = board
             .piece_indexes()
-            .drain(..)
+            .par_drain(..)
             .map(|piece| {
                 let board = board.nominate(piece).unwrap();
                 (
@@ -89,7 +90,7 @@ impl MinimaxPlayer {
     pub fn place(&mut self, board: &Board) -> Position {
         let moves = board
             .free_spaces()
-            .drain(..)
+            .par_drain(..)
             .map(|space| {
                 let pos = Position::from_index(space).unwrap();
                 let board = board.place(pos).unwrap();
