@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use ordered_float::OrderedFloat;
 use rand::Rng;
+use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelDrainRange, ParallelIterator};
 
 use crate::{board::Board, player::QuartoPlayer, position::Position};
 
@@ -15,7 +16,7 @@ impl MinimaxPlayer {
         }
         board
             .free_spaces()
-            .iter()
+            .par_iter()
             .map(|i| board.place(Position::from_index(*i).unwrap()).unwrap())
             .map(|b| OrderedFloat(self.maxi_nominate(depth - 1, &b)))
             .max()
@@ -29,7 +30,7 @@ impl MinimaxPlayer {
         }
         board
             .piece_indexes()
-            .iter()
+            .par_iter()
             .map(|i| board.nominate(*i).unwrap())
             .map(|b| OrderedFloat(self.mini_place(depth - 1, &b)))
             .min()
@@ -43,7 +44,7 @@ impl MinimaxPlayer {
         }
         board
             .free_spaces()
-            .iter()
+            .par_iter()
             .map(|i| board.place(Position::from_index(*i).unwrap()).unwrap())
             .map(|b| OrderedFloat(self.mini_nominate(depth - 1, &b)))
             .min()
@@ -57,7 +58,7 @@ impl MinimaxPlayer {
         }
         board
             .piece_indexes()
-            .iter()
+            .par_iter()
             .map(|i| board.nominate(*i).unwrap())
             .map(|b| OrderedFloat(self.maxi_place(depth - 1, &b)))
             .max()
@@ -68,7 +69,7 @@ impl MinimaxPlayer {
     pub fn nominate(&mut self, board: &Board) -> usize {
         let moves = board
             .piece_indexes()
-            .drain(..)
+            .par_drain(..)
             .map(|piece| {
                 let board = board.nominate(piece).unwrap();
                 (
@@ -89,7 +90,7 @@ impl MinimaxPlayer {
     pub fn place(&mut self, board: &Board) -> Position {
         let moves = board
             .free_spaces()
-            .drain(..)
+            .par_drain(..)
             .map(|space| {
                 let pos = Position::from_index(space).unwrap();
                 let board = board.place(pos).unwrap();
@@ -114,7 +115,7 @@ impl MinimaxPlayer {
         }
 
         let count = Board::quartos()
-            .iter()
+            .par_iter()
             .enumerate()
             .map(|(i, xs)| {
                 let xs = xs.iter().filter_map(|&x| board.get_square_index(x));
